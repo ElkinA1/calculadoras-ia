@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Calculadora gratis para salir de deudas: descubre en qué mes terminas de pagar, cuánto interés ahorras y qué deuda pagar primero (avalancha vs bola de nieve).">
+<title>Calculadora para salir de deudas | Libre de Deudas</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: ledger-style tool — inputs on the left, payoff result on the right, stacks on phones */
+:root{
+  --bg:#f3f6f5; --surface:#ffffff; --fg:#14211d; --muted:#5b6b66; --line:#d8e2df;
+  --accent:#0f7a5c; --accent-soft:#dff1ea; --warn:#b4540b; --warn-soft:#fbeadb; --alt:#5b5fc7;
+  --display:"Sora",system-ui,sans-serif; --body:"Inter",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1513; --surface:#16201d; --fg:#e6efec; --muted:#93a59f; --line:#26332f;
+  --accent:#3fcf9f; --accent-soft:#163a2f; --warn:#f0a35e; --warn-soft:#3a2614; --alt:#9fa2ff; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1513; --surface:#16201d; --fg:#e6efec; --muted:#93a59f; --line:#26332f;
+  --accent:#3fcf9f; --accent-soft:#163a2f; --warn:#f0a35e; --warn-soft:#3a2614; --alt:#9fa2ff; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 48px}
+.wrap{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:24px}
+header h1{font-family:var(--display);font-size:clamp(1.8rem,4vw,2.6rem);margin:0;letter-spacing:-.02em;text-wrap:balance}
+header p{margin:.4rem 0 0;color:var(--muted);max-width:62ch}
+.grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:16px;min-width:0}
+h2{font-family:var(--display);font-size:1.05rem;margin:0}
+.lbl{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:520px}
+th{text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;padding:0 6px 8px}
+td{padding:4px 6px;border-top:1px solid var(--line)}
+input,select{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:7px 9px;width:100%}
+input[type=number]{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button{font:inherit;cursor:pointer;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:8px 12px}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--surface);font-weight:600}
+.del{border:none;background:none;color:var(--muted);padding:4px 8px;font-size:1.1rem}
+.del:hover{color:var(--warn)}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:end}
+.row > div{flex:1 1 160px;display:flex;flex-direction:column;gap:6px}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{flex:1;border:none;border-radius:0;padding:10px}
+.seg button[aria-pressed=true]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.hint{font-size:.85rem;color:var(--muted);margin:0}
+.big{font-family:var(--display);font-size:clamp(2rem,5vw,2.8rem);font-weight:700;line-height:1.1;color:var(--accent)}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.stat{border-top:2px solid var(--line);padding-top:8px}
+.stat b{display:block;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:1.15rem;font-weight:500}
+.cmp{background:var(--accent-soft);border-radius:8px;padding:12px 14px;font-size:.92rem}
+.warnbox{background:var(--warn-soft);color:var(--warn);border-radius:8px;padding:12px 14px;font-size:.9rem}
+ol.order{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;counter-reset:o}
+ol.order li{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:center;counter-increment:o}
+ol.order li::before{content:counter(o);font-family:var(--mono);width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);font-size:.8rem}
+ol.order .when{font-family:var(--mono);font-size:.85rem;color:var(--muted)}
+svg text{fill:var(--muted);font-family:var(--mono);font-size:10px}
+.legend{display:flex;gap:16px;font-size:.82rem;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:6px}
+.example{font-size:.78rem;color:var(--warn);font-weight:600}
+.back{color:var(--accent);text-decoration:none;font-size:.85rem;font-weight:600}
+footer{font-size:.8rem;color:var(--muted);max-width:70ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <a href="../" class="back">← Más calculadoras</a>
+    <h1>Libre de Deudas</h1>
+    <p>Anota tus deudas, decide cuánto extra puedes pagar al mes y mira en qué mes quedas libre, cuánto interés te ahorras y qué deuda atacar primero.</p>
+  </header>
+
+  <div class="grid">
+    <section class="panel" aria-labelledby="h-deudas">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <h2 id="h-deudas">Tus deudas</h2>
+        <span class="example" id="exampleTag">Datos de ejemplo — reemplázalos por los tuyos</span>
+      </div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Deuda</th><th>Saldo</th><th>Interés anual %</th><th>Pago mínimo</th><th></th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <div class="row">
+        <button id="add">+ Agregar deuda</button>
+        <button id="reset">Volver al ejemplo</button>
+      </div>
+
+      <div class="row">
+        <div>
+          <label class="lbl" for="extra">Pago extra mensual</label>
+          <input type="number" id="extra" min="0" step="10" value="50">
+        </div>
+        <div>
+          <label class="lbl" for="currency">Moneda</label>
+          <select id="currency">
+            <option value="USD">USD $</option><option value="COP">COP $</option><option value="MXN">MXN $</option>
+            <option value="PEN">PEN S/</option><option value="ARS">ARS $</option><option value="CLP">CLP $</option><option value="EUR">EUR €</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <span class="lbl" id="m-lbl">Método</span>
+        <div class="seg" role="group" aria-labelledby="m-lbl">
+          <button id="m-av" aria-pressed="true">Avalancha · mayor interés primero</button>
+          <button id="m-sn" aria-pressed="false">Bola de nieve · menor saldo primero</button>
+        </div>
+        <p class="hint">La avalancha ahorra más dinero. La bola de nieve te da victorias rápidas que ayudan a no rendirte.</p>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="h-res" aria-live="polite">
+      <h2 id="h-res">Tu plan</h2>
+      <div id="result"></div>
+    </section>
+  </div>
+
+  <footer>Herramienta educativa. Los cálculos suponen interés mensual (tasa anual ÷ 12) y pagos constantes; tu banco puede calcular distinto. Tus datos se quedan solo en este navegador.</footer>
+</div>
+
+<script>
+const EXAMPLE=[
+  {name:"Tarjeta de crédito",bal:1200,rate:38,min:60},
+  {name:"Préstamo personal",bal:2500,rate:22,min:110},
+  {name:"Celular a cuotas",bal:400,rate:15,min:45}
+];
+const KEY="libre-deudas-v1";
+let state={debts:EXAMPLE.map(d=>({...d})),extra:50,method:"av",currency:"USD",isExample:true};
+try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&Array.isArray(s.debts))state=s;}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}};
+
+const $=id=>document.getElementById(id);
+const fmt=v=>{try{return new Intl.NumberFormat("es",{style:"currency",currency:state.currency,maximumFractionDigits:0}).format(v)}catch(e){return "$"+Math.round(v)}};
+const monthName=n=>{const d=new Date();d.setDate(1);d.setMonth(d.getMonth()+n);return d.toLocaleDateString("es",{month:"short",year:"numeric"})};
+
+function simulate(debts,extra,method){
+  let ds=debts.filter(d=>d.bal>0).map((d,i)=>({...d,i,b:d.bal,paidOff:null}));
+  const budget=ds.reduce((s,d)=>s+d.min,0)+extra;
+  let month=0,interest=0,series=[ds.reduce((s,d)=>s+d.b,0)];
+  while(ds.some(d=>d.b>0.005)&&month<600){
+    month++;
+    ds.forEach(d=>{if(d.b>0){const it=d.b*d.rate/100/12;d.b+=it;interest+=it}});
+    let money=budget;
+    ds.forEach(d=>{if(d.b>0){const p=Math.min(d.min,d.b);d.b-=p;money-=p}});
+    const order=ds.filter(d=>d.b>0.005).sort((a,b)=>method==="av"?b.rate-a.rate||a.b-b.b:a.b-b.b||b.rate-a.rate);
+    for(const d of order){if(money<=0)break;const p=Math.min(money,d.b);d.b-=p;money-=p}
+    ds.forEach(d=>{if(d.b<=0.005&&d.paidOff===null){d.b=0;d.paidOff=month}});
+    series.push(ds.reduce((s,d)=>s+d.b,0));
+  }
+  return {months:month,interest,series,done:!ds.some(d=>d.b>0.005),order:ds.slice().sort((a,b)=>(a.paidOff??1e9)-(b.paidOff??1e9))};
+}
+
+function renderRows(){
+  $("rows").innerHTML="";
+  state.debts.forEach((d,i)=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td><input id="n${i}" aria-label="Nombre de la deuda" value=""></td>
+      <td><input id="b${i}" type="number" min="0" step="10" aria-label="Saldo"></td>
+      <td><input id="r${i}" type="number" min="0" step="0.5" aria-label="Interés anual"></td>
+      <td><input id="p${i}" type="number" min="0" step="5" aria-label="Pago mínimo"></td>
+      <td><button class="del" aria-label="Eliminar ${d.name}">×</button></td>`;
+    tr.querySelector(`#n${i}`).value=d.name;
+    tr.querySelector(`#b${i}`).value=d.bal;
+    tr.querySelector(`#r${i}`).value=d.rate;
+    tr.querySelector(`#p${i}`).value=d.min;
+    tr.querySelectorAll("input").forEach(inp=>inp.addEventListener("input",()=>{
+      d.name=tr.querySelector(`#n${i}`).value;
+      d.bal=+tr.querySelector(`#b${i}`).value||0;
+      d.rate=+tr.querySelector(`#r${i}`).value||0;
+      d.min=+tr.querySelector(`#p${i}`).value||0;
+      state.isExample=false;update();
+    }));
+    tr.querySelector(".del").onclick=()=>{state.debts.splice(i,1);state.isExample=false;renderRows();update()};
+    $("rows").appendChild(tr);
+  });
+}
+
+function chart(a,b){
+  const W=460,H=170,P={l:52,r:10,t:10,b:22};
+  const n=Math.max(a.length,b.length)-1||1,max=Math.max(...a,...b,1);
+  const x=i=>P.l+(W-P.l-P.r)*i/n,y=v=>P.t+(H-P.t-P.b)*(1-v/max);
+  const path=s=>s.map((v,i)=>(i?"L":"M")+x(i).toFixed(1)+" "+y(v).toFixed(1)).join(" ");
+  let g="";for(let k=0;k<=3;k++){const v=max*k/3;g+=`<line x1="${P.l}" x2="${W-P.r}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${P.l-6}" y="${y(v)+3}" text-anchor="end">${fmt(v)}</text>`}
+  const ticks=[0,Math.round(n/2),n].map(i=>`<text x="${x(i)}" y="${H-6}" text-anchor="middle">mes ${i}</text>`).join("");
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Saldo total por mes">${g}${ticks}
+    <path d="${path(b)}" fill="none" stroke="var(--alt)" stroke-width="2" stroke-dasharray="4 3"/>
+    <path d="${path(a)}" fill="none" stroke="var(--accent)" stroke-width="2.5"/></svg>`;
+}
+
+function update(){
+  save();
+  $("exampleTag").hidden=!state.isExample;
+  $("m-av").setAttribute("aria-pressed",state.method==="av");
+  $("m-sn").setAttribute("aria-pressed",state.method==="sn");
+  const debts=state.debts.filter(d=>d.bal>0);
+  const R=$("result");
+  if(!debts.length){R.innerHTML=`<p class="hint">Agrega al menos una deuda con saldo para ver tu plan.</p>`;return}
+  const me=simulate(debts,state.extra,state.method);
+  const other=simulate(debts,state.extra,state.method==="av"?"sn":"av");
+  const base=simulate(debts,0,state.method);
+  const warn=debts.filter(d=>d.min<=d.bal*d.rate/100/12).map(d=>d.name);
+  let h="";
+  if(warn.length)h+=`<div class="warnbox">El pago mínimo de <b>${warn.join(", ")}</b> no alcanza ni para cubrir el interés del mes: esa deuda crece sola. Súbele el pago o renegóciala.</div>`;
+  if(!me.done){R.innerHTML=h+`<div class="warnbox">Con estos pagos la deuda no se termina de pagar en 50 años. Aumenta el pago extra.</div>`;return}
+  const saveI=base.done?base.interest-me.interest:null, saveM=base.done?base.months-me.months:null;
+  h+=`<div><span class="lbl">Quedas libre en</span><div class="big">${monthName(me.months)}</div><p class="hint">${me.months} meses desde hoy</p></div>
+  <div class="stats">
+    <div class="stat"><span class="lbl">Interés total</span><b>${fmt(me.interest)}</b></div>
+    <div class="stat"><span class="lbl">Pago mensual total</span><b>${fmt(debts.reduce((s,d)=>s+d.min,0)+state.extra)}</b></div>
+    <div class="stat"><span class="lbl">Ahorro vs. solo mínimos</span><b>${saveI!==null?fmt(saveI):"—"}</b></div>
+    <div class="stat"><span class="lbl">Meses menos</span><b>${saveM!==null?saveM:"Con solo mínimos no se paga"}</b></div>
+  </div>`;
+  const diff=other.interest-me.interest;
+  const otherName=state.method==="av"?"bola de nieve":"avalancha";
+  h+=`<div class="cmp">${Math.abs(diff)<1?`Los dos métodos dan casi lo mismo con tus datos.`:diff>0?`Este método te ahorra <b>${fmt(diff)}</b> frente a ${otherName}.`:`La ${otherName} te ahorraría <b>${fmt(-diff)}</b> más, en ${other.months} meses.`}</div>`;
+  h+=`<div><span class="lbl">Orden de pago</span></div><ol class="order">${me.order.map(d=>`<li><span>${d.name||"Sin nombre"}</span><span class="when">${monthName(d.paidOff)}</span></li>`).join("")}</ol>`;
+  h+=`<div class="legend"><span><i style="background:var(--accent)"></i>Tu plan</span><span><i style="background:var(--alt)"></i>${otherName}</span></div>${chart(me.series,other.series)}`;
+  R.innerHTML=h;
+}
+
+$("extra").value=state.extra;$("currency").value=state.currency;
+$("extra").oninput=e=>{state.extra=+e.target.value||0;update()};
+$("currency").onchange=e=>{state.currency=e.target.value;update()};
+$("m-av").onclick=()=>{state.method="av";update()};
+$("m-sn").onclick=()=>{state.method="sn";update()};
+$("add").onclick=()=>{state.debts.push({name:"Nueva deuda",bal:500,rate:20,min:30});state.isExample=false;renderRows();update()};
+$("reset").onclick=()=>{state={debts:EXAMPLE.map(d=>({...d})),extra:50,method:"av",currency:state.currency,isExample:true};$("extra").value=50;renderRows();update()};
+renderRows();update();
+</script>
+
+</html>

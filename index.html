@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Calculadoras de Bolsillo | Finanzas personales gratis</title>
+<meta name="description" content="Calculadoras gratis en español para tus finanzas: sal de deudas, descubre el costo real de comprar a cuotas y más. Sin registro, tus datos no salen de tu dispositivo.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#f3f6f5;--surface:#fff;--fg:#14211d;--muted:#5b6b66;--line:#d8e2df;--accent:#0f7a5c;--accent-soft:#dff1ea;
+  --display:"Sora",system-ui,sans-serif;--body:"Inter",system-ui,sans-serif}
+@media (prefers-color-scheme: dark){:root{--bg:#0e1513;--surface:#16201d;--fg:#e6efec;--muted:#93a59f;--line:#26332f;--accent:#3fcf9f;--accent-soft:#163a2f;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:48px}
+.wrap{max-width:880px;margin:0 auto;display:flex;flex-direction:column;gap:32px}
+h1{font-family:var(--display);font-size:clamp(2rem,5vw,3rem);letter-spacing:-.025em;margin:0;text-wrap:balance}
+.lead{color:var(--muted);font-size:1.05rem;max-width:58ch;margin:.6rem 0 0}
+.tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+a.tool{display:flex;flex-direction:column;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px;color:inherit;text-decoration:none;transition:border-color .15s}
+a.tool:hover,a.tool:focus-visible{border-color:var(--accent);outline:none}
+a.tool h2{font-family:var(--display);font-size:1.15rem;margin:0}
+a.tool p{margin:0;color:var(--muted);font-size:.95rem}
+a.tool span{color:var(--accent);font-weight:600;font-size:.9rem;margin-top:auto}
+.soon{border:1px dashed var(--line);border-radius:10px;padding:20px;color:var(--muted);font-size:.95rem}
+footer{color:var(--muted);font-size:.82rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Calculadoras de Bolsillo</h1>
+    <p class="lead">Herramientas gratis para tomar mejores decisiones con tu dinero. Sin registro y sin anuncios engañosos: tus datos se quedan en tu celular.</p>
+  </header>
+  <div class="tools">
+    <a class="tool" href="deudas/"><h2>Libre de Deudas</h2><p>Descubre en qué mes terminas de pagar todo y qué deuda atacar primero.</p><span>Abrir calculadora →</span></a>
+    <a class="tool" href="cuotas/"><h2>¿Cuánto pagas a cuotas?</h2><p>La cuota, el total y los intereses reales de comprar a plazos.</p><span>Abrir calculadora →</span></a>
+    <div class="soon">Próximamente: meta de ahorro, interés compuesto y presupuesto 50/30/20.</div>
+  </div>
+  <footer>Herramientas educativas. No constituyen asesoría financiera.</footer>
+</div>
+</body>
+</html>

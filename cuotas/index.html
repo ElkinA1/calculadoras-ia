@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>¿Cuánto pagas realmente a cuotas? | Calculadora de cuotas</title>
+<meta name="description" content="Calcula la cuota mensual, el total que pagas y el interés real de comprar a cuotas con tarjeta o crédito. Compara contra pagar de contado.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+:root{
+  --bg:#f3f6f5; --surface:#ffffff; --fg:#14211d; --muted:#5b6b66; --line:#d8e2df;
+  --accent:#0f7a5c; --accent-soft:#dff1ea; --warn:#b4540b; --warn-soft:#fbeadb;
+  --display:"Sora",system-ui,sans-serif; --body:"Inter",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#0e1513; --surface:#16201d; --fg:#e6efec; --muted:#93a59f; --line:#26332f;
+  --accent:#3fcf9f; --accent-soft:#163a2f; --warn:#f0a35e; --warn-soft:#3a2614; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 48px}
+.wrap{max-width:1000px;margin:0 auto;display:flex;flex-direction:column;gap:24px}
+.back{color:var(--accent);text-decoration:none;font-size:.85rem;font-weight:600}
+h1{font-family:var(--display);font-size:clamp(1.7rem,4vw,2.4rem);margin:.3rem 0 0;letter-spacing:-.02em;text-wrap:balance}
+header p{margin:.4rem 0 0;color:var(--muted);max-width:62ch}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:820px){.grid{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:16px;min-width:0}
+h2{font-family:var(--display);font-size:1.05rem;margin:0}
+.lbl{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.field{display:flex;flex-direction:column;gap:6px}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.row > .field{flex:1 1 140px}
+input,select{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%}
+input[type=number]{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.big{font-family:var(--display);font-size:clamp(2rem,5vw,2.8rem);font-weight:700;line-height:1.1;color:var(--accent)}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.stat{border-top:2px solid var(--line);padding-top:8px}
+.stat b{display:block;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:1.15rem;font-weight:500}
+.bar{height:14px;border-radius:7px;background:var(--accent-soft);overflow:hidden;display:flex}
+.bar span{background:var(--warn)}
+.cmp{background:var(--accent-soft);border-radius:8px;padding:12px 14px;font-size:.92rem}
+.warnbox{background:var(--warn-soft);color:var(--warn);border-radius:8px;padding:12px 14px;font-size:.9rem}
+.hint{font-size:.85rem;color:var(--muted);margin:0}
+details summary{cursor:pointer;color:var(--accent);font-weight:600}
+.tablewrap{overflow-x:auto;margin-top:10px}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-family:var(--mono);font-size:.82rem;min-width:420px}
+th,td{padding:5px 6px;text-align:right;border-top:1px solid var(--line)}
+th{font-family:var(--body);color:var(--muted);font-weight:600;font-size:.72rem;text-transform:uppercase;border-top:none}
+.cta{display:block;text-align:center;background:var(--accent);color:var(--surface);text-decoration:none;font-weight:600;padding:12px;border-radius:8px}
+footer{font-size:.8rem;color:var(--muted);max-width:70ch}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a href="../" class="back">← Más calculadoras</a>
+    <h1>¿Cuánto pagas realmente a cuotas?</h1>
+    <p>Pon el precio, el número de cuotas y la tasa de interés. Verás la cuota mensual, cuánto pagas en total y cuánto se va en intereses.</p>
+  </header>
+
+  <div class="grid">
+    <section class="panel" aria-labelledby="h-datos">
+      <h2 id="h-datos">La compra</h2>
+      <div class="row">
+        <div class="field"><label class="lbl" for="price">Precio</label><input id="price" type="number" min="0" step="10" value="800"></div>
+        <div class="field"><label class="lbl" for="n">Número de cuotas</label><input id="n" type="number" min="1" max="120" step="1" value="12"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label class="lbl" for="rate">Tasa de interés %</label><input id="rate" type="number" min="0" step="0.1" value="30"></div>
+        <div class="field"><label class="lbl" for="rtype">Tipo de tasa</label>
+          <select id="rtype"><option value="ea">Anual efectiva (E.A.)</option><option value="nom">Anual nominal</option><option value="m">Mensual</option></select></div>
+      </div>
+      <div class="row">
+        <div class="field"><label class="lbl" for="disc">Descuento si pagas de contado %</label><input id="disc" type="number" min="0" max="90" step="1" value="0"></div>
+        <div class="field"><label class="lbl" for="cur">Moneda</label>
+          <select id="cur"><option>USD</option><option>COP</option><option>MXN</option><option>PEN</option><option>ARS</option><option>CLP</option><option>EUR</option></select></div>
+      </div>
+      <p class="hint">La tasa aparece en el extracto de tu tarjeta o en el contrato del crédito. En Colombia se usa la E.A.; en otros países suele darse la tasa anual nominal o la mensual.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="h-res" aria-live="polite">
+      <h2 id="h-res">El costo real</h2>
+      <div id="out"></div>
+      <a class="cta" href="../deudas/">¿Ya tienes varias deudas? Arma tu plan para salir de ellas</a>
+    </section>
+  </div>
+  <footer>Herramienta educativa. Cálculo con cuota fija (sistema francés). Tu entidad puede sumar seguros o cuotas de manejo que no se incluyen aquí.</footer>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const KEY="cuotas-v1";
+try{const s=JSON.parse(localStorage.getItem(KEY));if(s)for(const k in s)if($(k))$(k).value=s[k];}catch(e){}
+const fmt=v=>{try{return new Intl.NumberFormat("es",{style:"currency",currency:$("cur").value,maximumFractionDigits:0}).format(v)}catch(e){return Math.round(v)}};
+function monthly(r,t){r/=100;if(t==="m")return r;if(t==="nom")return r/12;return Math.pow(1+r,1/12)-1}
+function calc(){
+  const P=+$("price").value||0,n=Math.max(1,Math.round(+$("n").value||1)),i=monthly(+$("rate").value||0,$("rtype").value),disc=(+$("disc").value||0)/100;
+  try{localStorage.setItem(KEY,JSON.stringify({price:$("price").value,n:$("n").value,rate:$("rate").value,rtype:$("rtype").value,disc:$("disc").value,cur:$("cur").value}))}catch(e){}
+  if(P<=0){$("out").innerHTML='<p class="hint">Escribe el precio para ver el cálculo.</p>';return}
+  const c=i===0?P/n:P*i/(1-Math.pow(1+i,-n)),total=c*n,int=total-P,cash=P*(1-disc),extra=total-cash;
+  const ea=(Math.pow(1+i,12)-1)*100;
+  let rows="",b=P;for(let k=1;k<=n;k++){const it=b*i,ab=c-it;b=Math.max(0,b-ab);rows+=`<tr><td>${k}</td><td>${fmt(c)}</td><td>${fmt(it)}</td><td>${fmt(ab)}</td><td>${fmt(b)}</td></tr>`}
+  let h=`<div><span class="lbl">Cuota mensual</span><div class="big">${fmt(c)}</div><p class="hint">${n} cuotas · tasa equivalente ${ea.toFixed(1)}% E.A.</p></div>
+  <div class="stats"><div class="stat"><span class="lbl">Total que pagas</span><b>${fmt(total)}</b></div>
+  <div class="stat"><span class="lbl">Intereses</span><b>${fmt(int)}</b></div></div>
+  <div><span class="lbl">Del total, cuánto es interés (${(int/total*100).toFixed(0)}%)</span><div class="bar" role="img" aria-label="Proporción de intereses"><span style="width:${(int/total*100).toFixed(1)}%"></span></div></div>`;
+  h+=`<div class="${extra>P*0.15?"warnbox":"cmp"}">Comparado con pagar de contado${disc?` con ${(disc*100).toFixed(0)}% de descuento`:""} (${fmt(cash)}), a cuotas pagas <b>${fmt(extra)} más</b>, un ${(extra/cash*100).toFixed(0)}% extra.</div>`;
+  if(ea>40)h+=`<div class="warnbox">Una tasa de ${ea.toFixed(0)}% E.A. es muy alta. Pregunta si hay una opción a menos cuotas o con otra entidad.</div>`;
+  h+=`<details><summary>Ver tabla de pagos mes a mes</summary><div class="tablewrap"><table><thead><tr><th>Mes</th><th>Cuota</th><th>Interés</th><th>Abono</th><th>Saldo</th></tr></thead><tbody>${rows}</tbody></table></div></details>`;
+  $("out").innerHTML=h;
+}
+document.querySelectorAll("input,select").forEach(e=>e.addEventListener("input",calc));
+calc();
+</script>
+</body>
+</html>
