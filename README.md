@@ -10,8 +10,7 @@ Sitio de calculadoras financieras gratis en español. Gana dinero con tres fuent
 index.html          Página principal (lista de calculadoras)
 deudas/index.html   Calculadora para salir de deudas
 cuotas/index.html   Calculadora del costo real de comprar a cuotas
-privado/            Kit y textos de venta (no se sube a internet)
- de venta, guiones de video, plan de 90 días
+privado/            Kit, textos de venta y guiones (no se sube a internet)
 ```
 Es HTML puro: no necesita servidor propio ni base de datos.
 
